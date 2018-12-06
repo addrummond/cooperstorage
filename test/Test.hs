@@ -17,7 +17,7 @@ isFalse = not . run
 
 test =
     let
-        Denotations{ likes, every, boy, john, some, smokes } =
+        Denotations{ likes, every, boy, girl, john, some, smokes } =
             withModel model denotations
     in
     and
@@ -25,6 +25,14 @@ test =
               retrieve (john |> (likes <| (store (every <| boy))))
         , isTrue $
               retrieve (john |> (likes <| (store (some <| boy))))
+        , isTrue $
+              retrieve ((some <| boy) <| (likes <| (store (some <| girl))))
+        , isTrue $
+              -- there is a boy x such that for every girl y, x likes y
+              retrieve ((some <| boy) <| (likes <| (store (every <| girl))))
+        , isTrue $
+              -- for every girl x, there is a boy y such that y likes x
+              retrieve (retrieve ((store (some <| boy)) |> (likes <| (store (every <| girl)))))
         ]
 
 main :: IO ()
