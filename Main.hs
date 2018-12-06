@@ -71,8 +71,8 @@ hListSplit
 hListSplit HNil HNil HNil = (HNil, HNil)
 hListSplit (HCons a xs) ys (HCons c zs) =
     (HCons c f, s)
-    where
-        (f, s) = hListSplit xs ys zs
+        where
+            (f, s) = hListSplit xs ys zs
 hListSplit HNil _ zs = (HNil, zs)
 
 class HSplit (a::List *) (b::List *) where
@@ -82,18 +82,20 @@ instance HSplit 'Nil a where
     hSplit xs = (HNil, xs)
 
 instance HSplit b c => HSplit ('Cons a b) c where
-    hSplit (HCons x xs) = (HCons x as, bs)
-        where (as, bs) = hSplit xs
+    hSplit (HCons x xs) =
+        (HCons x as, bs)
+            where (as, bs) = hSplit xs
 
 apply
-    :: Val (HList store1) (HList params1 -> a -> b)
+    :: HSplit params1 params2
+    => Val (HList store1) (HList params1 -> a -> b)
     -> Val (HList store2) (HList params2 -> a)
     -> Val (HList (Concat store1 store2)) (HList (Concat params1 params2) -> b)
 apply (Val store1 f1) (Val store2 f2) =
     Val (hListConcat store1 store2)
         (\ps ->
             let
-                (p1, p2) = hListSplit p1 p2 ps
+                (p1, p2) = hSplit ps
             in
                 (f1 p1) (f2 p2)
         )
@@ -141,8 +143,8 @@ denotations = Denotations
     , girl    = \Model{ girls } -> lift $ \x -> x `elem` girls
     , smokes  = \Model{ smokers } -> lift $ \x -> x `elem` smokers
     , dances  = \Model{ dancers } -> lift $ \x -> x `elem` dancers
-    , likes   = \Model{ likings } -> lift $ \x y -> (x,y) `elem` likings
-    , detests = \Model{ detestings } -> lift $ \x y -> (x,y) `elem` detestings
+    , likes   = \Model{ likings } -> lift $ \x y -> (y,x) `elem` likings
+    , detests = \Model{ detestings } -> lift $ \x y -> (y,x) `elem` detestings
     , every   = \Model{ individuals } -> lift $ \u v -> all (\x -> not (u x) || v x ) individuals
     , some    = \Model{ individuals } -> lift $ \u v -> any (\x -> u x && v x) individuals
     , john    = \_ -> lift John
