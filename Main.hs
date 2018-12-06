@@ -6,6 +6,8 @@
 {-# language PolyKinds #-}
 module Main where
 
+import Data.Traversable (Traversable, traverse)
+
 main = return ()
 
 class HasTrace a where
@@ -45,6 +47,8 @@ hListFirst (HCons a xs) = a
 data Val s a where
     Val :: HList s -> (HList a -> b) -> Val (HList s) ((HList a) -> b)
 
+type Simple a = Val (HList 'Nil) (HList 'Nil -> a)
+ 
 lift :: a -> Val (HList 'Nil) (HList 'Nil -> a)
 lift v = Val HNil (\_ -> v)
 
@@ -111,30 +115,32 @@ type family Domain a where
     Domain a = a
 
 data Denotations f = Denotations
-    { boy     :: Domain (f (Individual -> Bool))
-    , girl    :: Domain (f (Individual -> Bool))
-    , smokes  :: Domain (f (Individual -> Bool))
-    , dances  :: Domain (f (Individual -> Bool))
-    , likes   :: Domain (f (Individual -> Individual -> Bool))
-    , detests :: Domain (f (Individual -> Individual -> Bool))
-    , every   :: Domain (f ((Individual -> Bool) -> ((Individual -> Bool) -> Bool)))
-    , some    :: Domain (f ((Individual -> Bool) -> ((Individual -> Bool) -> Bool)))
+    { boy     :: Domain (f (Simple (Individual -> Bool)))
+    , girl    :: Domain (f (Simple (Individual -> Bool)))
+    , smokes  :: Domain (f (Simple (Individual -> Bool)))
+    , dances  :: Domain (f (Simple (Individual -> Bool)))
+    , likes   :: Domain (f (Simple (Individual -> Individual -> Bool)))
+    , detests :: Domain (f (Simple (Individual -> Individual -> Bool)))
+    , every   :: Domain (f (Simple ((Individual -> Bool) -> ((Individual -> Bool) -> Bool))))
+    , some    :: Domain (f (Simple ((Individual -> Bool) -> ((Individual -> Bool) -> Bool))))
+    , john    :: Domain (f (Simple Individual))
     }
 
 denotations :: Denotations ((->) Model)
 denotations = Denotations
-    { boy     = \Model{ boys } x -> x `elem` boys
-    , girl    = \Model{ girls } x -> x `elem` girls
-    , smokes  = \Model{ smokers } x -> x `elem` smokers
-    , dances  = \Model{ dancers } x -> x `elem` dancers
-    , likes   = \Model{ likings } x y -> (x,y) `elem` likings
-    , detests = \Model{ detestings } x y -> (x,y) `elem` detestings
-    , every   = \Model{ individuals } u v -> all (\x -> not (u x) || v x ) individuals
-    , some    = \Model{ individuals } u v -> any (\x -> u x && v x) individuals
+    { boy     = \Model{ boys } -> lift $ \x -> x `elem` boys
+    , girl    = \Model{ girls } -> lift $ \x -> x `elem` girls
+    , smokes  = \Model{ smokers } -> lift $ \x -> x `elem` smokers
+    , dances  = \Model{ dancers } -> lift $ \x -> x `elem` dancers
+    , likes   = \Model{ likings } -> lift $ \x y -> (x,y) `elem` likings
+    , detests = \Model{ detestings } -> lift $ \x y -> (x,y) `elem` detestings
+    , every   = \Model{ individuals } -> lift $ \u v -> all (\x -> not (u x) || v x ) individuals
+    , some    = \Model{ individuals } -> lift $ \u v -> any (\x -> u x && v x) individuals
+    , john    = \_ -> lift John
     }
 
 withModel :: Model -> Denotations ((->) Model) -> Denotations Id
-withModel m Denotations{ boy, girl, smokes, dances, likes, detests, every, some } = Denotations
+withModel m Denotations{ boy, girl, smokes, dances, likes, detests, every, some, john } = Denotations
     { boy = boy m   
     , girl = girl m
     , smokes = smokes m
@@ -143,6 +149,7 @@ withModel m Denotations{ boy, girl, smokes, dances, likes, detests, every, some 
     , detests = detests m
     , every = every m
     , some = some m
+    , john = john m
     }
 
 exampleModel :: Model
@@ -158,9 +165,20 @@ exampleModel = Model
 
 test =
     let
-        Denotations{ boy, smokes, every, some } = withModel exampleModel denotations
+        Denotations{ boy, smokes, every, some, likes, john } = withModel exampleModel denotations
     in
-        run (apply (apply (lift some) (lift boy)) (lift smokes))
+        --run (retrieve (store (apply every boy)))
+        run (retrieve (apply (apply likes (store (apply every boy))) john))
+        --run (apply (apply some boy) smokes)
+
+test2 :: (Int, Int)
+test2 =
+    let
+        (p1, p2) = hListSplit p1 p2 (HCons (1::Int) (HCons (2::Int) (HCons (3::Int) HNil)))
+    in
+        case p1 :: (HList ('Cons Int ('Cons Int 'Nil))) of
+            (HCons a (HCons b HNil)) ->
+                (a, b)
 
 {-every :: Val (HList 'Nil) (HList 'Nil -> (Individual -> Bool) -> Bool)
 every = Val HNil (\_ _ -> True)
