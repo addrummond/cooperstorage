@@ -20,11 +20,12 @@ test =
         Denotations{ likes, every, boy, john, some, smokes } =
             withModel model denotations
     in
-    isFalse
-        ( retrieve (john |> (likes <| (store (every <| boy)))) )
-    &&
-    isTrue
-        ( retrieve (john |> (likes <| (store (some <| boy)))) )
+    and
+        [ isFalse $
+              retrieve (john |> (likes <| (store (every <| boy))))
+        , isTrue $
+              retrieve (john |> (likes <| (store (some <| boy))))
+        ]
 
 main :: IO ()
 main =
