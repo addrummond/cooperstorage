@@ -43,6 +43,17 @@ hListFirst :: HList a -> First a
 hListFirst HNil = ()
 hListFirst (HCons a xs) = a
 
+class HListSplit (a::List *) (b::List *) where
+    hListSplit :: HList (Concat a b) -> (HList a, HList b)
+
+instance HListSplit 'Nil a where
+    hListSplit xs = (HNil, xs)
+
+instance HListSplit b c => HListSplit ('Cons a b) c where
+    hListSplit (HCons x xs) =
+        (HCons x as, bs)
+            where (as, bs) = hListSplit xs
+
 data Val s a where
     Val :: HList s -> (HList a -> b) -> Val (HList s) ((HList a) -> b)
 
@@ -66,28 +77,8 @@ retrieve (Val store v) =
     where
         stored = hListFirst store
 
-hListSplit
-    :: HList a -> HList b -> HList (Concat a b) -> (HList a, HList b)
-hListSplit HNil HNil HNil = (HNil, HNil)
-hListSplit (HCons a xs) ys (HCons c zs) =
-    (HCons c f, s)
-        where
-            (f, s) = hListSplit xs ys zs
-hListSplit HNil _ zs = (HNil, zs)
-
-class HSplit (a::List *) (b::List *) where
-    hSplit :: HList (Concat a b) -> (HList a, HList b)
-
-instance HSplit 'Nil a where
-    hSplit xs = (HNil, xs)
-
-instance HSplit b c => HSplit ('Cons a b) c where
-    hSplit (HCons x xs) =
-        (HCons x as, bs)
-            where (as, bs) = hSplit xs
-
 apply
-    :: HSplit params1 params2
+    :: HListSplit params1 params2
     => Val (HList store1) (HList params1 -> a -> b)
     -> Val (HList store2) (HList params2 -> a)
     -> Val (HList (Concat store1 store2)) (HList (Concat params1 params2) -> b)
@@ -95,7 +86,7 @@ apply (Val store1 f1) (Val store2 f2) =
     Val (hListConcat store1 store2)
         (\ps ->
             let
-                (p1, p2) = hSplit ps
+                (p1, p2) = hListSplit ps
             in
                 (f1 p1) (f2 p2)
         )
@@ -181,12 +172,3 @@ test =
         --run (retrieve (store (apply every boy)))
         run (retrieve (apply (apply likes (store (apply every boy))) john))
         --run (apply (apply some boy) smokes)
-
-test2 :: (Int, Int)
-test2 =
-    let
-        (p1, p2) = hListSplit p1 p2 (HCons (1::Int) (HCons (2::Int) (HCons (3::Int) HNil)))
-    in
-        case p1 :: (HList ('Cons Int ('Cons Int 'Nil))) of
-            (HCons a (HCons b HNil)) ->
-                (a, b)
