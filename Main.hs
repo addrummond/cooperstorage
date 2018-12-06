@@ -34,16 +34,6 @@ raiseLeftmost t@(HBranch (HLeaf _) _) = t
 raiseLeftmost t@(HBranch HEmpty a) = a
 raiseLeftmost (HBranch (HBranch a b) c) = HBranch a (HBranch b c)
 
---pop :: HBinTree  -> Maybe a
---pop Empty = Nothing
---pop (Leaf a) = Just a
---pop (Branch a _) = pop a
-
---rights :: BinTree a -> BinTree a
---rights Empty = Empty
---rights t@(Leaf a) = t
---rights (Branch (Leaf ) b) = 
-
 data List a = Nil | Cons a (List a)
 
 data HList (l::List *) where
@@ -208,17 +198,3 @@ test2 =
         case p1 :: (HList ('Cons Int ('Cons Int 'Nil))) of
             (HCons a (HCons b HNil)) ->
                 (a, b)
-
-{-every :: Val (HList 'Nil) (HList 'Nil -> (Individual -> Bool) -> Bool)
-every = Val HNil (\_ _ -> True)
-
-smokes :: Val (HList 'Nil) (HList 'Nil -> Individual -> Bool)
-smokes = Val HNil (\_ _ -> True)
-
-likes :: Val (HList 'Nil) (HList 'Nil -> Individual -> Individual -> Bool)
-likes = Val HNil (\_ _ _ -> True)
-
-john :: Val (HList 'Nil) (HList 'Nil -> Individual)
-john = Val HNil (\_ -> John)
-
-test = retrieve (apply (apply likes (store every)) john)-}
