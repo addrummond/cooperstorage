@@ -26,6 +26,7 @@ class HasTrace a where
 data Val s a where
     Val :: HList s -> (HList a -> b) -> Val (HList s) ((HList a) -> b)
 
+-- a simple value with an empty store (and hence no parameters)
 type Simple a = Val (HList 'Nil) (HList 'Nil -> a)
  
 lift :: a -> Val (HList 'Nil) (HList 'Nil -> a)
@@ -37,6 +38,7 @@ store
 store (Val store a) =
     Val (HCons (a HNil) HNil) (\(HCons x _) -> x)
 
+-- retrieves and applies the first value in the store
 retrieve
     :: Val (HList ('Cons ((a -> b) -> c) store)) (HList ('Cons a params) -> b)
     -> Val (HList store) (HList params -> c)
