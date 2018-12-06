@@ -6,15 +6,15 @@
 {-# language NamedFieldPuns #-}
 {-# language PolyKinds #-}
 module Cooper
-  ( HasTrace(..)
-  , Simple
-  , Val(..)
-  , apply
-  , lift
-  , retrieve
-  , run
-  , store
-  ) where
+    ( HasTrace(..)
+    , Simple
+    , Val(..)
+    , apply
+    , lift
+    , retrieve
+    , run
+    , store
+    ) where
 
 import HList (HList(HCons, HNil), HListConcat, HListSplit, List(Cons, Nil), hListConcat, hListFirst, hListRest, hListSplit)
 

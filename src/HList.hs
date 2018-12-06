@@ -6,17 +6,17 @@
 {-# language NamedFieldPuns #-}
 {-# language PolyKinds #-}
 module HList
-  ( HList(..)
-  , HListConcat
-  , HListFirst
-  , HListSplit
-  , HListRest
-  , List(..)
-  , hListConcat
-  , hListFirst
-  , hListRest
-  , hListSplit
-  ) where
+    ( HList(..)
+    , HListConcat
+    , HListFirst
+    , HListSplit
+    , HListRest
+    , List(..)
+    , hListConcat
+    , hListFirst
+    , hListRest
+    , hListSplit
+    ) where
 
 data List a = Nil | Cons a (List a)
 
