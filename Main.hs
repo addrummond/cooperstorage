@@ -15,6 +15,35 @@ class HasTrace a where
 
 data BinTree a = Empty | Leaf a | Branch (BinTree a) (BinTree a)
 
+data HBinTree (t::BinTree *) where
+    HEmpty  :: HBinTree 'Empty
+    HLeaf   :: a -> HBinTree ('Leaf a)
+    HBranch :: HBinTree a -> HBinTree b -> HBinTree ('Branch a b)
+
+type family RaiseLeftmost (a::k) :: k where
+    RaiseLeftmost 'Empty = 'Empty
+    RaiseLeftmost ('Leaf a) = ('Leaf a)
+    RaiseLeftmost ('Branch ('Leaf a) b) = 'Branch ('Leaf a) b
+    RaiseLeftmost ('Branch 'Empty a) = a
+    RaiseLeftmost ('Branch ('Branch a b) c) = 'Branch a ('Branch b c)
+
+raiseLeftmost :: HBinTree a -> HBinTree (RaiseLeftmost a)
+raiseLeftmost HEmpty = HEmpty
+raiseLeftmost t@(HLeaf _) = t
+raiseLeftmost t@(HBranch (HLeaf _) _) = t
+raiseLeftmost t@(HBranch HEmpty a) = a
+raiseLeftmost (HBranch (HBranch a b) c) = HBranch a (HBranch b c)
+
+--pop :: HBinTree  -> Maybe a
+--pop Empty = Nothing
+--pop (Leaf a) = Just a
+--pop (Branch a _) = pop a
+
+--rights :: BinTree a -> BinTree a
+--rights Empty = Empty
+--rights t@(Leaf a) = t
+--rights (Branch (Leaf ) b) = 
+
 data List a = Nil | Cons a (List a)
 
 data HList (l::List *) where
