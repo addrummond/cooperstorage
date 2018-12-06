@@ -7,50 +7,12 @@
 {-# language PolyKinds #-}
 module Main where
 
+import HList (HList(HCons, HNil), HListConcat, HListSplit, List(Cons, Nil), hListConcat, hListFirst, hListRest, hListSplit)
+
 main = return ()
 
 class HasTrace a where
     type TraceOf a :: *
-
-data List a = Nil | Cons a (List a)
-
-data HList (l::List *) where
-    HNil  :: HList Nil
-    HCons :: e -> HList l -> HList ('Cons e l)
-
-type family Concat (a::k) (b::k) :: k where
-    Concat 'Nil a = a
-    Concat ('Cons a xs) ys = 'Cons a (Concat xs ys)
-
-hListConcat :: HList a -> HList b -> HList (Concat a b)
-hListConcat HNil xs = xs
-hListConcat (HCons a xs) ys = HCons a (hListConcat xs ys)
-
-type family Rest (a::k) :: k where
-    Rest 'Nil = 'Nil
-    Rest ('Cons _ xs) = xs
-
-hListRest :: HList a -> HList (Rest a)
-hListRest (HCons a xs) = xs
-
-type family First a :: * where
-    First 'Nil = ()
-    First ('Cons a _) = a
-
-hListFirst :: HList a -> First a
-hListFirst HNil = ()
-hListFirst (HCons a xs) = a
-
-class HListSplit (a::List *) (b::List *) where
-    hListSplit :: HList (Concat a b) -> (HList a, HList b)
-
-instance HListSplit 'Nil a where
-    hListSplit xs = (HNil, xs)
-
-instance HListSplit b c => HListSplit ('Cons a b) c where
-    hListSplit (HCons x xs) =
-        (HCons x as, bs)
-            where (as, bs) = hListSplit xs
 
 data Val s a where
     Val :: HList s -> (HList a -> b) -> Val (HList s) ((HList a) -> b)
@@ -79,7 +41,7 @@ apply
     :: HListSplit params1 params2
     => Val (HList store1) (HList params1 -> a -> b)
     -> Val (HList store2) (HList params2 -> a)
-    -> Val (HList (Concat store1 store2)) (HList (Concat params1 params2) -> b)
+    -> Val (HList (HListConcat store1 store2)) (HList (HListConcat params1 params2) -> b)
 apply (Val store1 f1) (Val store2 f2) =
     Val (hListConcat store1 store2)
         (\ps ->
