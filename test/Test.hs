@@ -7,16 +7,19 @@
 {-# language PolyKinds #-}
 module Main where
 
+import Control.Monad (unless)
 import Cooper (HasTrace(TraceOf), Simple, Val(Val), apply, lift, retrieve, run, store)
-import ExampleModel (Denotations(..), denotations, model, withModel)
+import ExampleModel (Denotations(..), Model(..), denotations, model, withModel)
 
 test =
     let
-        Denotations{ boy, smokes, every, some, likes, john } = withModel model denotations
+        Denotations{ likes, every, boy, john, some, smokes } =
+            withModel model denotations
     in
-        --run (retrieve (store (apply every boy)))
-        run (retrieve (apply (apply likes (store (apply every boy))) john))
-        --run (apply (apply some boy) smokes)
+    not (run (retrieve (apply (apply likes (store (apply every boy))) john))) &&
+    run (retrieve (apply (apply likes (store (apply some boy))) john))
 
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main =
+    unless test $
+        error "Unexpected result"
