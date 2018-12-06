@@ -37,7 +37,7 @@ store (Val store a) =
 
 retrieve
     :: Val (HList ('Cons ((a -> b) -> c) store)) (HList ('Cons a params) -> b)
-       -> Val (HList store) (HList params -> c)
+    -> Val (HList store) (HList params -> c)
 retrieve (Val store v) =
     Val (hListRest store)
         (\ps -> stored (\x -> (v (HCons x ps))))
