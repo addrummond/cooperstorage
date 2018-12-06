@@ -31,7 +31,7 @@ data Val s a where
 
 -- a simple value with an empty store (and hence no parameters)
 type Simple a = Val (HList 'Nil) (HList 'Nil -> a)
- 
+
 lift :: a -> Val (HList 'Nil) (HList 'Nil -> a)
 lift v = Val HNil (\_ -> v)
 
