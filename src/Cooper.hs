@@ -9,6 +9,8 @@ module Cooper
     ( HasTrace(..)
     , Simple
     , Val(..)
+    , (<|)
+    , (|>)
     , apply
     , lift
     , retrieve
@@ -57,6 +59,22 @@ apply (Val store1 f1) (Val store2 f2) =
             in
                 (f1 p1) (f2 p2)
         )
+
+-- operator synonym for 'apply'
+(<|)
+    :: HListSplit params1 params2
+    => Val (HList store1) (HList params1 -> a -> b)
+    -> Val (HList store2) (HList params2 -> a)
+    -> Val (HList (HListConcat store1 store2)) (HList (HListConcat params1 params2) -> b)
+(<|) = apply
+
+-- operator synoym for 'apply' that takes function on the right
+(|>)
+    :: HListSplit params1 params2
+    => Val (HList store2) (HList params2 -> a)
+    -> Val (HList store1) (HList params1 -> a -> b)
+    -> Val (HList (HListConcat store1 store2)) (HList (HListConcat params1 params2) -> b)
+(|>) = flip apply
 
 run :: Val (HList 'Nil) (HList 'Nil -> a) -> a
 run (Val _ f) = f HNil
