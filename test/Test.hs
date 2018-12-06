@@ -8,7 +8,7 @@
 module Main where
 
 import Control.Monad (unless)
-import Cooper (HasTrace(TraceOf), Simple, Val(Val), (<|), (|>), apply, lift, retrieve, run, store)
+import Cooper (HasTrace(TraceOf), Simple, Val(Val), (<|), (|>), apply, lift, retrieve, retrieve2, retrieve3, retrieve4, run, store)
 import ExampleModel (Denotations(..), Model(..), denotations, model, withModel)
 
 isTrue = run
@@ -33,6 +33,9 @@ test =
         , isTrue $
             -- for every girl x, there is a boy y such that y likes x
             retrieve (retrieve ((store (some <| boy)) |> (likes <| (store (every <| girl)))))
+        , isTrue $
+            -- there is a boy x such that for every girl y, x likes y
+            retrieve (retrieve2 ((store (some <| boy)) |> (likes <| (store (every <| girl)))))
         , isFalse $
             -- there is a girl x such that for every boy y, x likes y
             retrieve ((some <| girl) <| (likes <| (store (every <| boy))))

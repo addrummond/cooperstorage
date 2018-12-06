@@ -14,6 +14,9 @@ module Cooper
     , apply
     , lift
     , retrieve
+    , retrieve2
+    , retrieve3
+    , retrieve4
     , run
     , store
     ) where
@@ -83,3 +86,33 @@ infixl 1 |>
 
 run :: Val (HList 'Nil) (HList 'Nil -> a) -> a
 run (Val _ f) = f HNil
+
+-- retrieves and applies the second value in the store
+retrieve2
+    :: Val (HList ('Cons sfst ('Cons ((a -> b) -> c) store))) (HList ('Cons pfst ('Cons a params)) -> b)
+    -> Val (HList ('Cons sfst store)) (HList ('Cons pfst params) -> c)
+retrieve2 (Val store v) =
+    Val (HCons (hListFirst store) (hListRest (hListRest store)))
+        (\ps -> stored (\x -> (v (HCons (hListFirst ps) (HCons x (hListRest ps))))))
+    where
+        stored = hListFirst (hListRest store)
+
+-- retrieves and applies the third value in the store
+retrieve3
+    :: Val (HList ('Cons sfst ('Cons ssnd ('Cons ((a -> b) -> c) store)))) (HList ('Cons pfst ('Cons psnd ('Cons a params))) -> b)
+    -> Val (HList ('Cons sfst ('Cons ssnd store))) (HList ('Cons pfst ('Cons psnd params)) -> c)
+retrieve3 (Val store v) =
+    Val (HCons (hListFirst store) (HCons (hListFirst (hListRest store)) (hListRest  (hListRest (hListRest store)))))
+        (\ps -> stored (\x -> (v (HCons (hListFirst ps) (HCons (hListFirst (hListRest ps)) (HCons x (hListRest (hListRest ps))))))))
+    where
+        stored = hListFirst (hListRest (hListRest store))
+
+-- retrieves and applies the fourth value in the store
+retrieve4
+    :: Val (HList ('Cons sfst ('Cons ssnd ('Cons strd ('Cons ((a -> b) -> c) store))))) (HList ('Cons pfst ('Cons psnd ('Cons ptrd ('Cons a params)))) -> b)
+    -> Val (HList ('Cons sfst ('Cons ssnd ('Cons strd store)))) (HList ('Cons pfst ('Cons psnd ('Cons ptrd params))) -> c)
+retrieve4 (Val store v) =
+    Val (HCons (hListFirst store) (HCons (hListFirst (hListRest store)) (HCons (hListFirst (hListRest (hListRest store))) (hListRest (hListRest (hListRest (hListRest store)))))))
+        (\ps -> stored (\x -> (v (HCons (hListFirst ps) (HCons (hListFirst (hListRest ps)) (HCons (hListFirst (hListRest (hListRest ps))) (HCons x (hListRest (hListRest (hListRest ps))))))))))
+    where
+        stored = hListFirst (hListRest (hListRest (hListRest store)))
