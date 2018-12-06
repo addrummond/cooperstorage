@@ -76,5 +76,8 @@ apply (Val store1 f1) (Val store2 f2) =
     -> Val (HList (HListConcat store1 store2)) (HList (HListConcat params1 params2) -> b)
 (|>) = flip apply
 
+infixr 1 <|
+infixl 1 |>
+
 run :: Val (HList 'Nil) (HList 'Nil -> a) -> a
 run (Val _ f) = f HNil
