@@ -2,6 +2,7 @@
 {-# language FlexibleInstances #-}
 {-# language TypeFamilies #-}
 {-# language GADTs #-}
+{-# language MultiParamTypeClasses #-}
 {-# language NamedFieldPuns #-}
 {-# language PolyKinds #-}
 module Main where
@@ -12,27 +13,6 @@ main = return ()
 
 class HasTrace a where
     type TraceOf a :: *
-
-data BinTree a = Empty | Leaf a | Branch (BinTree a) (BinTree a)
-
-data HBinTree (t::BinTree *) where
-    HEmpty  :: HBinTree 'Empty
-    HLeaf   :: a -> HBinTree ('Leaf a)
-    HBranch :: HBinTree a -> HBinTree b -> HBinTree ('Branch a b)
-
-type family RaiseLeftmost (a::k) :: k where
-    RaiseLeftmost 'Empty = 'Empty
-    RaiseLeftmost ('Leaf a) = ('Leaf a)
-    RaiseLeftmost ('Branch ('Leaf a) b) = 'Branch ('Leaf a) b
-    RaiseLeftmost ('Branch 'Empty a) = a
-    RaiseLeftmost ('Branch ('Branch a b) c) = 'Branch a ('Branch b c)
-
-raiseLeftmost :: HBinTree a -> HBinTree (RaiseLeftmost a)
-raiseLeftmost HEmpty = HEmpty
-raiseLeftmost t@(HLeaf _) = t
-raiseLeftmost t@(HBranch (HLeaf _) _) = t
-raiseLeftmost t@(HBranch HEmpty a) = a
-raiseLeftmost (HBranch (HBranch a b) c) = HBranch a (HBranch b c)
 
 data List a = Nil | Cons a (List a)
 
@@ -94,6 +74,16 @@ hListSplit (HCons a xs) ys (HCons c zs) =
     where
         (f, s) = hListSplit xs ys zs
 hListSplit HNil _ zs = (HNil, zs)
+
+class HSplit (a::List *) (b::List *) where
+    hSplit :: HList (Concat a b) -> (HList a, HList b)
+
+instance HSplit 'Nil a where
+    hSplit xs = (HNil, xs)
+
+instance HSplit b c => HSplit ('Cons a b) c where
+    hSplit (HCons x xs) = (HCons x as, bs)
+        where (as, bs) = hSplit xs
 
 apply
     :: Val (HList store1) (HList params1 -> a -> b)
