@@ -7,8 +7,6 @@
 {-# language PolyKinds #-}
 module Main where
 
-import Data.Traversable (Traversable, traverse)
-
 main = return ()
 
 class HasTrace a where
