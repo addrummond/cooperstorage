@@ -38,6 +38,8 @@ instance TraceList 'Nil where
 instance HasTrace x => TraceList ('Cons x xs) where
     type TracesOf ('Cons x xs) = ('Cons (TraceOf x) (TracesOf xs))
 
+-- a means of composing values of types a and b (in that order) to obtain a
+-- value of type c; c uniqely determined by a and b
 class ComposeWith a b c | a b -> c where
     composeWith :: a -> b -> c
 
@@ -77,12 +79,12 @@ retrieve (Val store v) =
         stored = hListFirst store
 
 apply
-    :: ( ComposeWith f a r,
-         HListSplit store1 store2,
-         HListSplit (TracesOf store1) (TracesOf store2),
-         TraceList store1, TraceList store2,
-         TraceList (HListConcat store1 store2),
-         HListConcat (TracesOf store1) (TracesOf store2) ~ TracesOf (HListConcat store1 store2)
+    :: ( ComposeWith f a r
+       , HListSplit store1 store2
+       , HListSplit (TracesOf store1) (TracesOf store2)
+       , TraceList store1, TraceList store2
+       , TraceList (HListConcat store1 store2)
+       , HListConcat (TracesOf store1) (TracesOf store2) ~ TracesOf (HListConcat store1 store2)
        )
     => Val (HList store1) (HList (TracesOf store1) -> f)
     -> Val (HList store2) (HList (TracesOf store2) -> a)
@@ -98,12 +100,12 @@ apply (Val store1 f1) (Val store2 f2) =
 
 -- operator synonym for 'apply'
 (<|)
-    :: ( ComposeWith f a r,
-         HListSplit store1 store2,
-         HListSplit (TracesOf store1) (TracesOf store2),
-         TraceList store1, TraceList store2,
-         TraceList (HListConcat store1 store2),
-         HListConcat (TracesOf store1) (TracesOf store2) ~ TracesOf (HListConcat store1 store2)
+    :: ( ComposeWith f a r
+       , HListSplit store1 store2
+       , HListSplit (TracesOf store1) (TracesOf store2)
+       , TraceList store1, TraceList store2
+       , TraceList (HListConcat store1 store2)
+       , HListConcat (TracesOf store1) (TracesOf store2) ~ TracesOf (HListConcat store1 store2)
        )
     => Val (HList store1) (HList (TracesOf store1) -> f)
     -> Val (HList store2) (HList (TracesOf store2) -> a)
@@ -112,12 +114,12 @@ apply (Val store1 f1) (Val store2 f2) =
 
 -- operator synonym for 'apply' that takes function on the right
 (|>)
-    :: ( ComposeWith f a r,
-         HListSplit store1 store2,
-         HListSplit (TracesOf store1) (TracesOf store2),
-         TraceList store1, TraceList store2,
-         TraceList (HListConcat store1 store2),
-         HListConcat (TracesOf store1) (TracesOf store2) ~ TracesOf (HListConcat store1 store2)
+    :: ( ComposeWith f a r
+       , HListSplit store1 store2
+       , HListSplit (TracesOf store1) (TracesOf store2)
+       , TraceList store1, TraceList store2
+       , TraceList (HListConcat store1 store2)
+       , HListConcat (TracesOf store1) (TracesOf store2) ~ TracesOf (HListConcat store1 store2)
        )
     => Val (HList store2) (HList (TracesOf store2) -> a)
     -> Val (HList store1) (HList (TracesOf store1) -> f)
