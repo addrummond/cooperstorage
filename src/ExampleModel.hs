@@ -61,6 +61,11 @@ data Denotations f = Denotations
     , every   :: Domain (f (Simple ((E -> Bool) -> ((E -> Bool) -> Bool))))
     , some    :: Domain (f (Simple ((E -> Bool) -> ((E -> Bool) -> Bool))))
     , john    :: Domain (f (Simple E))
+    , tom     :: Domain (f (Simple E))
+    , bill    :: Domain (f (Simple E))
+    , jane    :: Domain (f (Simple E))
+    , mary    :: Domain (f (Simple E))
+    , carol   :: Domain (f (Simple E))
     }
 
 denotations :: Denotations ((->) Model)
@@ -74,10 +79,15 @@ denotations = Denotations
     , every   = \Model{ individuals } -> lift $ \u v -> all (\x -> not (u x) || v x ) individuals
     , some    = \Model{ individuals } -> lift $ \u v -> any (\x -> u x && v x) individuals
     , john    = \_ -> lift John
+    , tom     = \_ -> lift John
+    , bill    = \_ -> lift John
+    , jane    = \_ -> lift John
+    , mary    = \_ -> lift John
+    , carol   = \_ -> lift John
     }
 
 withModel :: Model -> Denotations ((->) Model) -> Denotations Id
-withModel m Denotations{ boy, girl, smokes, dances, likes, detests, every, some, john } = Denotations
+withModel m Denotations{ boy, girl, smokes, dances, likes, detests, every, some, john, tom, bill, jane, mary, carol } = Denotations
     { boy = boy m   
     , girl = girl m
     , smokes = smokes m
@@ -87,4 +97,9 @@ withModel m Denotations{ boy, girl, smokes, dances, likes, detests, every, some,
     , every = every m
     , some = some m
     , john = john m
+    , tom = tom m
+    , bill = bill m
+    , jane = jane m
+    , mary = mary m
+    , carol = carol m
     }
