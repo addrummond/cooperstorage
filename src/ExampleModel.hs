@@ -18,7 +18,7 @@ module ExampleModel
 
 import Cooper (HasTrace(TraceOf), Simple, lift)
 
-data E = John | Tom | Bill | Jane deriving Eq
+data E = John | Tom | Bill | Jane | Mary | Carol deriving Eq
 
 instance HasTrace ((E -> Bool) -> Bool) where
     type TraceOf ((E -> Bool) -> Bool) = E
@@ -35,12 +35,12 @@ data Model = Model
 
 model :: Model
 model = Model
-    { individuals = [John, Tom, Bill, Jane]
+    { individuals = [John, Tom, Bill, Jane, Mary, Carol]
     , boys        = [John, Tom, Bill]
-    , girls       = [Jane]
+    , girls       = [Jane, Mary, Carol]
     , smokers     = [John, Jane]
-    , dancers     = [John, Bill]
-    , likings     = [(John, Tom), (Bill, Jane)]
+    , dancers     = [John, Bill, Tom, Jane]
+    , likings     = [(John, Tom), (Bill, Jane), (Bill, Mary), (Bill, Carol), (Carol, Mary)]
     , detestings  = [(Jane, Tom)]
     }
 
