@@ -7,7 +7,8 @@
 {-# language NamedFieldPuns #-}
 {-# language PolyKinds #-}
 module Cooper
-    ( HasTrace(..)
+    ( ComposeWith(..)
+    , HasTrace(..)
     , Simple
     , Val(..)
     , (<|)
