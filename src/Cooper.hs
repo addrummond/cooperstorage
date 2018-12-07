@@ -86,7 +86,7 @@ apply (Val store1 f1) (Val store2 f2) =
     -> Val (HList (HListConcat store1 store2)) (HList (HListConcat params1 params2) -> b)
 (<|) = apply
 
--- operator synoym for 'apply' that takes function on the right
+-- operator synonym for 'apply' that takes function on the right
 (|>)
     :: HListSplit params1 params2
     => Val (HList store2) (HList params2 -> a)
