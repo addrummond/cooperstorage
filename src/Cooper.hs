@@ -1,5 +1,6 @@
 {-# language DataKinds #-}
 {-# language FlexibleInstances #-}
+{-# language FunctionalDependencies #-}
 {-# language TypeFamilies #-}
 {-# language GADTs #-}
 {-# language MultiParamTypeClasses #-}
@@ -25,6 +26,17 @@ import HList (HList(HCons, HNil), HListConcat, HListSplit, List(Cons, Nil), hLis
 
 class HasTrace a where
     type TraceOf a :: *
+
+class ComposeWith a b c | a b -> c where
+    composeWith :: a -> b -> c
+
+-- composition by function application
+instance ComposeWith (a -> b) a b where
+    composeWith = id
+
+-- composition by predicate modification
+instance ComposeWith (a -> Bool) (a -> Bool) (a -> Bool) where
+    composeWith p1 p2 x = p1 x && p2 x
 
 data Val s a where
     Val :: HList s -> (HList a -> b) -> Val (HList s) ((HList a) -> b)
@@ -52,17 +64,17 @@ retrieve (Val store v) =
         stored = hListFirst store
 
 apply
-    :: HListSplit params1 params2
-    => Val (HList store1) (HList params1 -> a -> b)
+    :: (HListSplit params1 params2, ComposeWith f a r)
+    => Val (HList store1) (HList params1 -> f)
     -> Val (HList store2) (HList params2 -> a)
-    -> Val (HList (HListConcat store1 store2)) (HList (HListConcat params1 params2) -> b)
+    -> Val (HList (HListConcat store1 store2)) (HList (HListConcat params1 params2) -> r)
 apply (Val store1 f1) (Val store2 f2) =
     Val (hListConcat store1 store2)
         (\ps ->
             let
                 (p1, p2) = hListSplit ps
             in
-                (f1 p1) (f2 p2)
+                composeWith (f1 p1) (f2 p2)
         )
 
 -- operator synonym for 'apply'
