@@ -1,11 +1,11 @@
 {-# language DataKinds #-}
 {-# language FlexibleInstances #-}
 {-# language FunctionalDependencies #-}
-{-# language TypeFamilies #-}
 {-# language GADTs #-}
 {-# language MultiParamTypeClasses #-}
 {-# language NamedFieldPuns #-}
 {-# language PolyKinds #-}
+{-# language TypeFamilies #-}
 module Cooper
     ( ComposeWith(..)
     , HasTrace(..)
