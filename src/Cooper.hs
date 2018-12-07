@@ -10,7 +10,7 @@ module Cooper
     ( ComposeWith(..)
     , HasTrace(..)
     , Simple
-    , Val(..)
+    , Val
     , (<|)
     , (|>)
     , apply
@@ -39,6 +39,12 @@ instance ComposeWith (a -> b) a b where
 instance ComposeWith (a -> Bool) (a -> Bool) (a -> Bool) where
     composeWith p1 p2 x = p1 x && p2 x
 
+-- The type of a lifted semantic value. Note that this type does not enforce
+-- the appropriate relation between the store and the list of parameters. This
+-- would get quite complicated, as we'd need to add a HasTrace type class
+-- constraint for the type of every member of the HList. The types for 'lift',
+-- 'store', 'retrieve', 'apply' and 'run' ensure that bad Vals aren't
+-- constructed.
 data Val s a where
     Val :: HList s -> (HList a -> b) -> Val (HList s) ((HList a) -> b)
 

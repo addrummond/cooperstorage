@@ -8,7 +8,7 @@
 module Main where
 
 import Control.Monad (unless)
-import Cooper (HasTrace(TraceOf), Simple, Val(Val), (<|), (|>), apply, lift, retrieve, retrieve2, retrieve3, retrieve4, run, store)
+import Cooper (HasTrace(TraceOf), Simple, Val, (<|), (|>), apply, lift, retrieve, retrieve2, retrieve3, retrieve4, run, store)
 import ExampleModel (Denotations(..), Model(..), denotations, model, withModel)
 
 isTrue = run
