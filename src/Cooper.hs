@@ -1,4 +1,5 @@
 {-# language DataKinds #-}
+{-# language FlexibleContexts #-}
 {-# language FlexibleInstances #-}
 {-# language FunctionalDependencies #-}
 {-# language GADTs #-}
@@ -28,6 +29,15 @@ import HList (HList(HCons, HNil), HListConcat, HListSplit, List(Cons, Nil), hLis
 class HasTrace a where
     type TraceOf a :: *
 
+class TraceList (a :: List *) where
+    type TracesOf a :: List *
+
+instance TraceList 'Nil where
+    type TracesOf 'Nil = 'Nil
+
+instance HasTrace x => TraceList ('Cons x xs) where
+    type TracesOf ('Cons x xs) = ('Cons (TraceOf x) (TracesOf xs))
+
 class ComposeWith a b c | a b -> c where
     composeWith :: a -> b -> c
 
@@ -39,14 +49,8 @@ instance ComposeWith (a -> b) a b where
 instance ComposeWith (a -> Bool) (a -> Bool) (a -> Bool) where
     composeWith p1 p2 x = p1 x && p2 x
 
--- The type of a lifted semantic value. Note that this type does not enforce
--- the appropriate relation between the store and the list of parameters. This
--- would get quite complicated, as we'd need to add a HasTrace type class
--- constraint for the type of every member of the HList. The types for 'lift',
--- 'store', 'retrieve', 'apply' and 'run' ensure that bad Vals aren't
--- constructed.
 data Val s a where
-    Val :: HList s -> (HList a -> b) -> Val (HList s) ((HList a) -> b)
+    Val :: TraceList s => HList s -> (HList (TracesOf s) -> b) -> Val (HList s) ((HList (TracesOf s)) -> b)
 
 -- a simple value with an empty store (and hence no parameters)
 type Simple a = Val (HList 'Nil) (HList 'Nil -> a)
@@ -55,15 +59,17 @@ lift :: a -> Val (HList 'Nil) (HList 'Nil -> a)
 lift v = Val HNil (\_ -> v)
 
 store
-    :: Val (HList 'Nil) (HList 'Nil -> a)
+    :: HasTrace a
+    => Val (HList 'Nil) (HList 'Nil -> a)
     -> Val (HList ('Cons a 'Nil)) (HList ('Cons (TraceOf a) 'Nil) -> TraceOf a)
 store (Val store a) =
     Val (HCons (a HNil) HNil) (\(HCons x _) -> x)
 
 -- retrieves and applies the first value in the store
 retrieve
-    :: Val (HList ('Cons ((a -> b) -> c) store)) (HList ('Cons a params) -> b)
-    -> Val (HList store) (HList params -> c)
+    :: TraceList store
+    => Val (HList ('Cons ((a -> b) -> c) store)) (HList ('Cons a (TracesOf store)) -> b)
+    -> Val (HList store) (HList (TracesOf store) -> c)
 retrieve (Val store v) =
     Val (hListRest store)
         (\ps -> stored (\x -> (v (HCons x ps))))
@@ -71,10 +77,16 @@ retrieve (Val store v) =
         stored = hListFirst store
 
 apply
-    :: (HListSplit params1 params2, ComposeWith f a r)
-    => Val (HList store1) (HList params1 -> f)
-    -> Val (HList store2) (HList params2 -> a)
-    -> Val (HList (HListConcat store1 store2)) (HList (HListConcat params1 params2) -> r)
+    :: ( ComposeWith f a r,
+         HListSplit store1 store2,
+         HListSplit (TracesOf store1) (TracesOf store2),
+         TraceList store1, TraceList store2,
+         TraceList (HListConcat store1 store2),
+         HListConcat (TracesOf store1) (TracesOf store2) ~ TracesOf (HListConcat store1 store2)
+       )
+    => Val (HList store1) (HList (TracesOf store1) -> f)
+    -> Val (HList store2) (HList (TracesOf store2) -> a)
+    -> Val (HList (HListConcat store1 store2)) (HList (HListConcat (TracesOf store1) (TracesOf store2)) -> r)
 apply (Val store1 f1) (Val store2 f2) =
     Val (hListConcat store1 store2)
         (\ps ->
@@ -86,18 +98,30 @@ apply (Val store1 f1) (Val store2 f2) =
 
 -- operator synonym for 'apply'
 (<|)
-    :: HListSplit params1 params2
-    => Val (HList store1) (HList params1 -> a -> b)
-    -> Val (HList store2) (HList params2 -> a)
-    -> Val (HList (HListConcat store1 store2)) (HList (HListConcat params1 params2) -> b)
+    :: ( ComposeWith f a r,
+         HListSplit store1 store2,
+         HListSplit (TracesOf store1) (TracesOf store2),
+         TraceList store1, TraceList store2,
+         TraceList (HListConcat store1 store2),
+         HListConcat (TracesOf store1) (TracesOf store2) ~ TracesOf (HListConcat store1 store2)
+       )
+    => Val (HList store1) (HList (TracesOf store1) -> f)
+    -> Val (HList store2) (HList (TracesOf store2) -> a)
+    -> Val (HList (HListConcat store1 store2)) (HList (HListConcat (TracesOf store1) (TracesOf store2)) -> r)
 (<|) = apply
 
 -- operator synonym for 'apply' that takes function on the right
 (|>)
-    :: HListSplit params1 params2
-    => Val (HList store2) (HList params2 -> a)
-    -> Val (HList store1) (HList params1 -> a -> b)
-    -> Val (HList (HListConcat store1 store2)) (HList (HListConcat params1 params2) -> b)
+    :: ( ComposeWith f a r,
+         HListSplit store1 store2,
+         HListSplit (TracesOf store1) (TracesOf store2),
+         TraceList store1, TraceList store2,
+         TraceList (HListConcat store1 store2),
+         HListConcat (TracesOf store1) (TracesOf store2) ~ TracesOf (HListConcat store1 store2)
+       )
+    => Val (HList store2) (HList (TracesOf store2) -> a)
+    -> Val (HList store1) (HList (TracesOf store1) -> f)
+    -> Val (HList (HListConcat store1 store2)) (HList (HListConcat (TracesOf store1) (TracesOf store2)) -> r)
 (|>) = flip apply
 
 infixr 1 <|
@@ -108,8 +132,9 @@ run (Val _ f) = f HNil
 
 -- retrieves and applies the second value in the store
 retrieve2
-    :: Val (HList ('Cons sfst ('Cons ((a -> b) -> c) store))) (HList ('Cons pfst ('Cons a params)) -> b)
-    -> Val (HList ('Cons sfst store)) (HList ('Cons pfst params) -> c)
+    :: (HasTrace sfst, TraceList store)
+    => Val (HList ('Cons sfst ('Cons ((a -> b) -> c) store))) (HList ('Cons (TraceOf sfst) ('Cons a (TracesOf store))) -> b)
+    -> Val (HList ('Cons sfst store)) (HList ('Cons (TraceOf sfst) (TracesOf store)) -> c)
 retrieve2 (Val store v) =
     Val (HCons (hListFirst store) (hListRest (hListRest store)))
         (\ps -> stored (\x -> (v (HCons (hListFirst ps) (HCons x (hListRest ps))))))
@@ -118,8 +143,9 @@ retrieve2 (Val store v) =
 
 -- retrieves and applies the third value in the store
 retrieve3
-    :: Val (HList ('Cons sfst ('Cons ssnd ('Cons ((a -> b) -> c) store)))) (HList ('Cons pfst ('Cons psnd ('Cons a params))) -> b)
-    -> Val (HList ('Cons sfst ('Cons ssnd store))) (HList ('Cons pfst ('Cons psnd params)) -> c)
+    :: (HasTrace sfst, HasTrace ssnd, TraceList store)
+    => Val (HList ('Cons sfst ('Cons ssnd ('Cons ((a -> b) -> c) store)))) (HList ('Cons (TraceOf sfst) ('Cons (TraceOf ssnd) ('Cons a (TracesOf store)))) -> b)
+    -> Val (HList ('Cons sfst ('Cons ssnd store))) (HList ('Cons (TraceOf sfst) ('Cons (TraceOf ssnd) (TracesOf store))) -> c)
 retrieve3 (Val store v) =
     Val (HCons (hListFirst store) (HCons (hListFirst (hListRest store)) (hListRest  (hListRest (hListRest store)))))
         (\ps -> stored (\x -> (v (HCons (hListFirst ps) (HCons (hListFirst (hListRest ps)) (HCons x (hListRest (hListRest ps))))))))
@@ -128,8 +154,9 @@ retrieve3 (Val store v) =
 
 -- retrieves and applies the fourth value in the store
 retrieve4
-    :: Val (HList ('Cons sfst ('Cons ssnd ('Cons strd ('Cons ((a -> b) -> c) store))))) (HList ('Cons pfst ('Cons psnd ('Cons ptrd ('Cons a params)))) -> b)
-    -> Val (HList ('Cons sfst ('Cons ssnd ('Cons strd store)))) (HList ('Cons pfst ('Cons psnd ('Cons ptrd params))) -> c)
+    :: (HasTrace sfst, HasTrace ssnd, HasTrace strd, TraceList store)
+    => Val (HList ('Cons sfst ('Cons ssnd ('Cons strd ('Cons ((a -> b) -> c) store))))) (HList ('Cons (TraceOf sfst) ('Cons (TraceOf ssnd) ('Cons (TraceOf strd) ('Cons a (TracesOf store))))) -> b)
+    -> Val (HList ('Cons sfst ('Cons ssnd ('Cons strd store)))) (HList ('Cons (TraceOf sfst) ('Cons (TraceOf ssnd) ('Cons (TraceOf strd) (TracesOf store)))) -> c)
 retrieve4 (Val store v) =
     Val (HCons (hListFirst store) (HCons (hListFirst (hListRest store)) (HCons (hListFirst (hListRest (hListRest store))) (hListRest (hListRest (hListRest (hListRest store)))))))
         (\ps -> stored (\x -> (v (HCons (hListFirst ps) (HCons (hListFirst (hListRest ps)) (HCons (hListFirst (hListRest (hListRest ps))) (HCons x (hListRest (hListRest (hListRest ps))))))))))
