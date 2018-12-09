@@ -12,8 +12,7 @@ module Cooper
     , HasTrace(..)
     , Simple
     , Val
-    , (<|)
-    , (|>)
+    , ($$)
     , apply
     , lift
     , retrieve
@@ -46,6 +45,8 @@ class ComposeWith a b c | a b -> c where
 -- composition by function application
 instance ComposeWith (a -> b) a b where
     composeWith = id
+instance ComposeWith a (a -> b) b where
+    composeWith = flip id
 
 -- composition by predicate modification
 instance ComposeWith (a -> Bool) (a -> Bool) (a -> Bool) where
@@ -99,7 +100,7 @@ apply (Val store1 f1) (Val store2 f2) =
         )
 
 -- operator synonym for 'apply'
-(<|)
+($$)
     :: ( ComposeWith f a r
        , HListSplit store1 store2
        , HListSplit (TracesOf store1) (TracesOf store2)
@@ -110,24 +111,9 @@ apply (Val store1 f1) (Val store2 f2) =
     => Val (HList store1) (HList (TracesOf store1) -> f)
     -> Val (HList store2) (HList (TracesOf store2) -> a)
     -> Val (HList (HListConcat store1 store2)) (HList (HListConcat (TracesOf store1) (TracesOf store2)) -> r)
-(<|) = apply
+($$) = apply
 
--- operator synonym for 'apply' that takes function on the right
-(|>)
-    :: ( ComposeWith f a r
-       , HListSplit store1 store2
-       , HListSplit (TracesOf store1) (TracesOf store2)
-       , TraceList store1, TraceList store2
-       , TraceList (HListConcat store1 store2)
-       , HListConcat (TracesOf store1) (TracesOf store2) ~ TracesOf (HListConcat store1 store2)
-       )
-    => Val (HList store2) (HList (TracesOf store2) -> a)
-    -> Val (HList store1) (HList (TracesOf store1) -> f)
-    -> Val (HList (HListConcat store1 store2)) (HList (HListConcat (TracesOf store1) (TracesOf store2)) -> r)
-(|>) = flip apply
-
-infixr 1 <|
-infixl 1 |>
+infixr 1 $$
 
 run :: Val (HList 'Nil) (HList 'Nil -> a) -> a
 run (Val _ f) = f HNil
