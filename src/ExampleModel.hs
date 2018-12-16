@@ -4,6 +4,7 @@ module ExampleModel
     , Model(..)
     , denotations
     , evalExample
+    , composeExample
     , model
     , withModel
     ) where
@@ -98,5 +99,9 @@ withModel m Denots{ boy, girl, smokes, dances, likes, detests, every, some, john
 
 -- Utility function that's useful in ghci.
 evalExample f = unlift (f ds)
+    where
+        ds = withModel model denotations
+
+composeExample f = f ds
     where
         ds = withModel model denotations

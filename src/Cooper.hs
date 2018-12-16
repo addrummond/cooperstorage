@@ -61,12 +61,12 @@ store (Val store a) =
 
 -- retrieves and applies the first value in the store
 retrieve
-    :: TraceList store
-    => Val (HList ('Cons ((a -> b) -> c) store)) (HList ('Cons a (TracesOf store)) -> b)
-    -> Val (HList store) (HList (TracesOf store) -> c)
+    :: (TraceList store, ComposeWith s (p -> t) r)
+    => Val (HList ('Cons s store)) (HList ('Cons p (TracesOf store)) -> t)
+    -> Val (HList store) (HList (TracesOf store) -> r)
 retrieve (Val store v) =
     Val (hListRest store)
-        (\ps -> stored (\x -> (v (HCons x ps))))
+        (\ps -> composeWith stored (\x -> (v (HCons x ps))))
     where
         stored = hListFirst store
 
@@ -111,33 +111,33 @@ unlift (Val _ f) = f HNil
 
 -- retrieves and applies the second value in the store
 retrieve2
-    :: (HasTrace sfst, TraceList store)
-    => Val (HList ('Cons sfst ('Cons ((a -> b) -> c) store))) (HList ('Cons (TraceOf sfst) ('Cons a (TracesOf store))) -> b)
-    -> Val (HList ('Cons sfst store)) (HList ('Cons (TraceOf sfst) (TracesOf store)) -> c)
+    :: (HasTrace sfst, TraceList store, ComposeWith s (p -> t) r)
+    => Val (HList ('Cons sfst ('Cons s store))) (HList ('Cons (TraceOf sfst) ('Cons p (TracesOf store))) -> t)
+    -> Val (HList ('Cons sfst store)) (HList ('Cons (TraceOf sfst) (TracesOf store)) -> r)
 retrieve2 (Val store v) =
     Val (HCons (hListFirst store) (hListRest (hListRest store)))
-        (\ps -> stored (\x -> (v (HCons (hListFirst ps) (HCons x (hListRest ps))))))
+        (\ps -> composeWith stored (\x -> (v (HCons (hListFirst ps) (HCons x (hListRest ps))))))
     where
         stored = hListFirst (hListRest store)
 
 -- retrieves and applies the third value in the store
 retrieve3
-    :: (HasTrace sfst, HasTrace ssnd, TraceList store)
-    => Val (HList ('Cons sfst ('Cons ssnd ('Cons ((a -> b) -> c) store)))) (HList ('Cons (TraceOf sfst) ('Cons (TraceOf ssnd) ('Cons a (TracesOf store)))) -> b)
-    -> Val (HList ('Cons sfst ('Cons ssnd store))) (HList ('Cons (TraceOf sfst) ('Cons (TraceOf ssnd) (TracesOf store))) -> c)
+    :: (HasTrace sfst, HasTrace ssnd, TraceList store, ComposeWith s (p -> t) r)
+    => Val (HList ('Cons sfst ('Cons ssnd ('Cons s store)))) (HList ('Cons (TraceOf sfst) ('Cons (TraceOf ssnd) ('Cons p (TracesOf store)))) -> t)
+    -> Val (HList ('Cons sfst ('Cons ssnd store))) (HList ('Cons (TraceOf sfst) ('Cons (TraceOf ssnd) (TracesOf store))) -> r)
 retrieve3 (Val store v) =
     Val (HCons (hListFirst store) (HCons (hListFirst (hListRest store)) (hListRest  (hListRest (hListRest store)))))
-        (\ps -> stored (\x -> (v (HCons (hListFirst ps) (HCons (hListFirst (hListRest ps)) (HCons x (hListRest (hListRest ps))))))))
+        (\ps -> composeWith stored (\x -> (v (HCons (hListFirst ps) (HCons (hListFirst (hListRest ps)) (HCons x (hListRest (hListRest ps))))))))
     where
         stored = hListFirst (hListRest (hListRest store))
 
 -- retrieves and applies the fourth value in the store
 retrieve4
-    :: (HasTrace sfst, HasTrace ssnd, HasTrace strd, TraceList store)
-    => Val (HList ('Cons sfst ('Cons ssnd ('Cons strd ('Cons ((a -> b) -> c) store))))) (HList ('Cons (TraceOf sfst) ('Cons (TraceOf ssnd) ('Cons (TraceOf strd) ('Cons a (TracesOf store))))) -> b)
-    -> Val (HList ('Cons sfst ('Cons ssnd ('Cons strd store)))) (HList ('Cons (TraceOf sfst) ('Cons (TraceOf ssnd) ('Cons (TraceOf strd) (TracesOf store)))) -> c)
+    :: (HasTrace sfst, HasTrace ssnd, HasTrace strd, TraceList store, ComposeWith s (p -> t) r)
+    => Val (HList ('Cons sfst ('Cons ssnd ('Cons strd ('Cons s store))))) (HList ('Cons (TraceOf sfst) ('Cons (TraceOf ssnd) ('Cons (TraceOf strd) ('Cons p (TracesOf store))))) -> t)
+    -> Val (HList ('Cons sfst ('Cons ssnd ('Cons strd store)))) (HList ('Cons (TraceOf sfst) ('Cons (TraceOf ssnd) ('Cons (TraceOf strd) (TracesOf store)))) -> r)
 retrieve4 (Val store v) =
     Val (HCons (hListFirst store) (HCons (hListFirst (hListRest store)) (HCons (hListFirst (hListRest (hListRest store))) (hListRest (hListRest (hListRest (hListRest store)))))))
-        (\ps -> stored (\x -> (v (HCons (hListFirst ps) (HCons (hListFirst (hListRest ps)) (HCons (hListFirst (hListRest (hListRest ps))) (HCons x (hListRest (hListRest (hListRest ps))))))))))
+        (\ps -> composeWith stored (\x -> (v (HCons (hListFirst ps) (HCons (hListFirst (hListRest ps)) (HCons (hListFirst (hListRest (hListRest ps))) (HCons x (hListRest (hListRest (hListRest ps))))))))))
     where
         stored = hListFirst (hListRest (hListRest (hListRest store)))
