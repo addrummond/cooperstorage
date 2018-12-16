@@ -16,6 +16,9 @@ data E = John | Tom | Bill | Jane | Mary | Carol deriving Eq
 instance HasTrace ((E -> Bool) -> Bool) where
     type TraceOf ((E -> Bool) -> Bool) = E
 
+instance HasTrace E where
+    type TraceOf E = E
+
 data Model = Model
     { individuals :: [E]
     , boys        :: [E]

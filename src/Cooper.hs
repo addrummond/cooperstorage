@@ -2,7 +2,7 @@ module Cooper
     ( ComposeWith(..)
     , HasTrace(..)
     , Simple
-    , Val
+    , Val(Val)
     , ($$)
     , apply
     , lift
