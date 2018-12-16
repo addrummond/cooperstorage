@@ -1,12 +1,3 @@
-{-# language DataKinds #-}
-{-# language FlexibleContexts #-}
-{-# language FlexibleInstances #-}
-{-# language FunctionalDependencies #-}
-{-# language GADTs #-}
-{-# language MultiParamTypeClasses #-}
-{-# language NamedFieldPuns #-}
-{-# language PolyKinds #-}
-{-# language TypeFamilies #-}
 module HList
     ( HList(..)
     , HListConcat

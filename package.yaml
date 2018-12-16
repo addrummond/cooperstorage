@@ -24,6 +24,8 @@ dependencies:
 library:
   source-dirs: src
 
+ghc-options: "-XDataKinds -XFlexibleContexts -XFlexibleInstances -XGADTs -XMultiParamTypeClasses -XNamedFieldPuns -XPolyKinds -XTypeFamilies -XFunctionalDependencies -XRecordWildCards"
+
 tests:
   cooperstorage-test:
     main:                Test.hs

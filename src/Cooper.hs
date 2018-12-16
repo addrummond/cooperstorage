@@ -1,12 +1,3 @@
-{-# language DataKinds #-}
-{-# language FlexibleContexts #-}
-{-# language FlexibleInstances #-}
-{-# language FunctionalDependencies #-}
-{-# language GADTs #-}
-{-# language MultiParamTypeClasses #-}
-{-# language NamedFieldPuns #-}
-{-# language PolyKinds #-}
-{-# language TypeFamilies #-}
 module Cooper
     ( ComposeWith(..)
     , HasTrace(..)
@@ -19,7 +10,7 @@ module Cooper
     , retrieve2
     , retrieve3
     , retrieve4
-    , run
+    , unlift
     , store
     ) where
 
@@ -115,8 +106,8 @@ apply (Val store1 f1) (Val store2 f2) =
 
 infixr 1 $$
 
-run :: Val (HList 'Nil) (HList 'Nil -> a) -> a
-run (Val _ f) = f HNil
+unlift :: Val (HList 'Nil) (HList 'Nil -> a) -> a
+unlift (Val _ f) = f HNil
 
 -- retrieves and applies the second value in the store
 retrieve2

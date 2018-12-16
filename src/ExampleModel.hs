@@ -1,22 +1,14 @@
-{-# language DataKinds #-}
-{-# language FlexibleContexts #-}
-{-# language FlexibleInstances #-}
-{-# language FunctionalDependencies #-}
-{-# language GADTs #-}
-{-# language MultiParamTypeClasses #-}
-{-# language NamedFieldPuns #-}
-{-# language PolyKinds #-}
-{-# language TypeFamilies #-}
 module ExampleModel
-    ( Denotations(..)
+    ( Denots(..)
     , E
     , Model(..)
     , denotations
+    , evalExample
     , model
     , withModel
     ) where
 
-import Cooper (HasTrace(TraceOf), Simple, lift)
+import Cooper (HasTrace(TraceOf), Simple, lift, unlift)
 
 data E = John | Tom | Bill | Jane | Mary | Carol deriving Eq
 
@@ -51,7 +43,7 @@ type family Domain a where
     Domain (Id a) = a
     Domain a = a
 
-data Denotations f = Denotations
+data Denots f = Denots
     { boy     :: Domain (f (Simple (E -> Bool)))
     , girl    :: Domain (f (Simple (E -> Bool)))
     , smokes  :: Domain (f (Simple (E -> Bool)))
@@ -68,8 +60,8 @@ data Denotations f = Denotations
     , carol   :: Domain (f (Simple E))
     }
 
-denotations :: Denotations ((->) Model)
-denotations = Denotations
+denotations :: Denots ((->) Model)
+denotations = Denots
     { boy     = \Model{ boys } -> lift $ \x -> x `elem` boys
     , girl    = \Model{ girls } -> lift $ \x -> x `elem` girls
     , smokes  = \Model{ smokers } -> lift $ \x -> x `elem` smokers
@@ -86,8 +78,8 @@ denotations = Denotations
     , carol   = \_ -> lift John
     }
 
-withModel :: Model -> Denotations ((->) Model) -> Denotations Id
-withModel m Denotations{ boy, girl, smokes, dances, likes, detests, every, some, john, tom, bill, jane, mary, carol } = Denotations
+withModel :: Model -> Denots ((->) Model) -> Denots Id
+withModel m Denots{ boy, girl, smokes, dances, likes, detests, every, some, john, tom, bill, jane, mary, carol } = Denots
     { boy = boy m   
     , girl = girl m
     , smokes = smokes m
@@ -103,3 +95,8 @@ withModel m Denotations{ boy, girl, smokes, dances, likes, detests, every, some,
     , mary = mary m
     , carol = carol m
     }
+
+-- Utility function that's useful in ghci.
+evalExample f = unlift (f ds)
+    where
+        ds = withModel model denotations
