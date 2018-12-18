@@ -11,7 +11,7 @@ module Main where
 
 import Control.Monad (unless)
 import Cooper (HasTrace(TraceOf), Simple, Val, ($$), apply, lift, retrieve, retrieve2, retrieve3, retrieve4, unlift, store)
-import ExampleModel (Denotations(..), Model(..), denotations, model, withModel)
+import ExampleModel (Denots(..), Model(..), denotations, model, withModel)
 
 isTrue = unlift
 
@@ -19,7 +19,7 @@ isFalse = not . unlift
 
 test =
     let
-        Denotations{ likes, every, boy, girl, john, some, smokes } =
+        Denots{ likes, every, boy, girl, john, some, smokes } =
             withModel model denotations
     in
     and
