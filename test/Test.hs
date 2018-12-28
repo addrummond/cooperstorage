@@ -10,7 +10,7 @@
 module Main where
 
 import Control.Monad (unless)
-import Cooper (HasTrace(TraceOf), Simple, Val, ($$), apply, lift, retrieve, retrieve2, retrieve3, retrieve4, unlift, store)
+import Cooper (HasTrace(TraceOf), Simple, Val, ($$), lift, retrieve, retrieve2, retrieve3, retrieve4, unlift, store)
 import ExampleModel (Denots(..), Model(..), denotations, model, withModel)
 
 isTrue = unlift

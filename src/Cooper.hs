@@ -4,7 +4,7 @@ module Cooper
     , Simple
     , Val(Val)
     , ($$)
-    , apply
+    , compose
     , lift
     , retrieve
     , retrieve2
@@ -70,7 +70,7 @@ retrieve (Val store v) =
     where
         stored = hListFirst store
 
-apply
+compose
     :: ( ComposeWith f a r
        , HListSplit store1 store2
        , HListSplit (TracesOf store1) (TracesOf store2)
@@ -81,7 +81,7 @@ apply
     => Val (HList store1) (HList (TracesOf store1) -> f)
     -> Val (HList store2) (HList (TracesOf store2) -> a)
     -> Val (HList (HListConcat store1 store2)) (HList (HListConcat (TracesOf store1) (TracesOf store2)) -> r)
-apply (Val store1 f1) (Val store2 f2) =
+compose (Val store1 f1) (Val store2 f2) =
     Val (hListConcat store1 store2)
         (\ps ->
             let
@@ -90,7 +90,7 @@ apply (Val store1 f1) (Val store2 f2) =
                 composeWith (f1 p1) (f2 p2)
         )
 
--- operator synonym for 'apply'
+-- operator synonym for 'compose'
 ($$)
     :: ( ComposeWith f a r
        , HListSplit store1 store2
@@ -102,7 +102,7 @@ apply (Val store1 f1) (Val store2 f2) =
     => Val (HList store1) (HList (TracesOf store1) -> f)
     -> Val (HList store2) (HList (TracesOf store2) -> a)
     -> Val (HList (HListConcat store1 store2)) (HList (HListConcat (TracesOf store1) (TracesOf store2)) -> r)
-($$) = apply
+($$) = compose
 
 infixr 1 $$
 
