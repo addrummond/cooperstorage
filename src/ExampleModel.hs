@@ -100,10 +100,9 @@ withModel m Denots{ boy, girl, smokes, dances, likes, detests, every, some, john
     , carol = carol m
     }
 
--- Utility function that's useful in ghci.
-evalExample f = unlift (f ds)
-    where
-        ds = withModel model denotations
+-- Utility functions that are useful in ghci.
+
+evalExample = unlift . composeExample
 
 composeExample f = f ds
     where
