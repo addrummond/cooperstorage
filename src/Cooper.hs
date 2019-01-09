@@ -29,7 +29,7 @@ instance HasTrace x => TraceList ('Cons x xs) where
     type TracesOf ('Cons x xs) = ('Cons (TraceOf x) (TracesOf xs))
 
 -- a means of composing values of types a and b (in that order) to obtain a
--- value of type c; c uniqely determined by a and b
+-- value of type c; c uniquely determined by a and b
 class ComposeWith a b c | a b -> c where
     composeWith :: a -> b -> c
 
